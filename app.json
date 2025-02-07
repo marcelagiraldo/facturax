@@ -1,5 +1,6 @@
 {
   "expo": {
+    "scheme":"facturax",
     "name": "facturax",
     "slug": "facturax",
     "version": "1.0.0",
