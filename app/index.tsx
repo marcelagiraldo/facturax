@@ -15,18 +15,20 @@ const Index = () => {
 
       {/* Sección inferior */}
       <View className="flex-1 items-center justify-center">
-        <Link asChild href={'/principal'}>
+        <Link asChild href={'/login'}>
           <Pressable className="bg-[#4A90E2] p-4 rounded-lg w-[200px] items-center">
             <Text className="text-white text-lg font-bold">Iniciar Sesión</Text>
           </Pressable>
         </Link>
-        <Pressable className="bg-[#4A90E2] p-4 rounded-lg w-[200px] items-center mt-12" onPress={()=>router.push('/register')}>
-          <Text className="text-white text-lg font-bold">Registrarse</Text>
-        </Pressable>
+        <Link asChild href={'/register'}>
+          <Pressable className="bg-[#4A90E2] p-4 rounded-lg w-[200px] items-center mt-12">
+            <Text className="text-white text-lg font-bold">Registrarse</Text>
+          </Pressable>
+        </Link>  
+          
       </View>
     </SafeAreaView>    
   )
 }
 
 export default Index
-
