@@ -1,15 +1,27 @@
 import { Stack } from "expo-router";
 
-import "../global.css";
-
 const HomeLayout = () => {
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }}/>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }}/>      
-      <Stack.Screen name="principal" options={{ headerShown: false }}/>
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: "#003B73", // Color de fondo azul oscuro
+        },
+        headerTintColor: "#ffffff", // Texto del header en blanco
+        headerTitleStyle: {
+          fontSize: 18,
+          fontWeight: "bold",
+        },
+        headerShadowVisible: false, // Elimina la sombra del header
+      }}
+    >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      
+      <Stack.Screen name="principal" options={{headerShown: false}}
+      />
     </Stack>
-  )
-}
+  );
+};
 
-export default HomeLayout
+export default HomeLayout;

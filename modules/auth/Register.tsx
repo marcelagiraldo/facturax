@@ -12,58 +12,234 @@ import { StatusBar } from "expo-status-bar";
 import { Link, router } from "expo-router";
 import Svg, { Ellipse } from "react-native-svg";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-
+import SvgTop from "../../components/atoms/SvgTop";
+import { useForm, Controller } from "react-hook-form";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { containers } from "../../components/Tokens";
 const RegisterModule = () => {
-  function SvgTop() {
-    return (
-      <Svg
-        width="390"
-        height="130"
-        viewBox="0 0 390 163"
-        fill="none"
-      >
-        <Ellipse cx="195" cy="7.5" rx="283" ry="155.5" fill="#003B73" />
-      </Svg>
-    );
-  }
-  return (    
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      name: "",
+      lastname: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      phone: "",
+    },
+  });
+  const onSubmit = (data:any) => {
+    console.log(data);
+    router.navigate("/principal");
+  };
+  const onRegister = async (data:any) => {
+    try {
+      handleSubmit(onSubmit)
+      await AsyncStorage.setItem("@userData", JSON.stringify(data));
+      alert("Registro exitoso");
+      router.navigate("/login"); // Redirige a la pantalla de Login
+    } catch (e) {
+      console.log("Error al guardar usuario", e);
+    }
+  };
+  const password = watch("password");
+  return (
     <KeyboardAwareScrollView>
-      <SafeAreaView style={styles.container}>  
-        <View style={styles.svgContainer}><SvgTop></SvgTop></View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.svgContainer}>
+          <SvgTop></SvgTop>
+        </View>
         <View style={styles.buttonContainer}>
-          <Link asChild href={'/login'}>
+          <Link asChild href={"/login"}>
             <Pressable style={styles.loginButton}>
               <Text style={styles.textBlack}>Iniciar Sesión</Text>
             </Pressable>
           </Link>
-          <Link asChild href={'/register'}>
+          <Link asChild href={"/register"}>
             <Pressable style={styles.registerButton}>
               <Text style={styles.textWhite}>Registrarse</Text>
             </Pressable>
           </Link>
         </View>
-        
+
         <View style={styles.contentContainer}>
           <Text style={styles.title}>Registrarse</Text>
-          <View >
           <View>
-            <TextInput style={styles.input} placeholder="Nombre" />
-            <TextInput style={styles.input} placeholder="Apellido" />
+            <View>
+              <Controller
+                control={control}
+                rules={{
+                  required: "El nombre es obligatorio",
+                  pattern: {
+                    value: /^[A-Za-z\s]+$/,
+                    message: "El nombre solo debe contener letras",
+                  },
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Nombres"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    autoCapitalize="none"
+                  />
+                )}
+                name="name"
+              />
+              {errors.name && (
+                <Text style={{ color: "red" }}>{errors.name.message}</Text>
+              )}
+
+              {/* Campo de contraseña */}
+              <Controller
+                control={control}
+                rules={{
+                  required: "El apellido es obligatorio",
+                  pattern: {
+                    value: /^[A-Za-z\s]+$/,
+                    message: "El apellido solo debe contener letras",
+                  },
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Apellidos"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    autoCapitalize="none"
+                  />
+                )}
+                name="lastname"
+              />
+              {errors.lastname && (
+                <Text style={{ color: "red" }}>{errors.lastname.message}</Text>
+              )}
+            </View>
+
+            <View>
+              <Controller
+                control={control}
+                rules={{
+                  required: "El correo es obligatorio",
+                  pattern: {
+                    value: /\S+@\S+\.\S+/,
+                    message: "Ingresa un correo válido",
+                  },
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Correo electrónico"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+                name="email"
+              />
+              {errors.email && (
+                <Text style={{ color: "red" }}>{errors.email.message}</Text>
+              )}
+              <Controller
+                control={control}
+                rules={{
+                  required: "El teléfono es obligatorio",
+                  pattern: {
+                    value: /^[0-9]+$/, // Solo números
+                    message: "El teléfono solo debe contener números",
+                  },
+                  minLength: {
+                    value: 10,
+                    message: "El teléfono debe tener al menos 10 dígitos",
+                  },
+                  maxLength: {
+                    value: 15,
+                    message: "El teléfono no debe superar los 15 dígitos",
+                  },
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Teléfono"
+                    keyboardType="phone-pad" // Solo números y caracteres telefónicos
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
+                name="phone"
+              />
+              {errors.phone && (
+                <Text style={{ color: "red" }}>{errors.phone.message}</Text>
+              )}
+            </View>
+
+            <View>
+              <Controller
+                control={control}
+                rules={{
+                  required: "La contraseña es obligatoria",
+                  minLength: {
+                    value: 6,
+                    message: "La contraseña debe tener al menos 6 caracteres",
+                  },
+                  pattern: {
+                    value:
+                      /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
+                    message:
+                      "Debe incluir una mayúscula, un número y un carácter especial",
+                  },
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Contraseña"
+                    secureTextEntry
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
+                name="password"
+              />
+              {errors.password && (
+                <Text style={{ color: "red" }}>{errors.password.message}</Text>
+              )}
+              <Controller
+                control={control}
+                rules={{
+                  required: "La contraseña es obligatoria",
+                  validate: (value) =>
+                    value === password || "Las contraseñas no coinciden"
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Repetir contraseña"
+                    secureTextEntry
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
+                name="password"
+              />
+              {errors.password && (
+                <Text style={{ color: "red" }}>{errors.password.message}</Text>
+              )}
+            </View>
           </View>
 
-          <View>
-            <TextInput style={styles.input} placeholder="Correo" keyboardType="email-address" />
-            <TextInput style={styles.input} placeholder="Teléfono" keyboardType="phone-pad" />
-          </View>
-
-          <View>
-            <TextInput style={styles.input} placeholder="Contraseña" secureTextEntry />
-            <TextInput style={styles.input} placeholder="Repetir contraseña" secureTextEntry />
-          </View>
-        </View>
-          
-          <Pressable style={styles.registerButton}>
-            <Text style={styles.textWhite}>Registrarse</Text>
+          <Pressable style={styles.registerButton} onPress={handleSubmit(onRegister)}>
+            <Text style={styles.textWhite} >Registrarse</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -73,14 +249,13 @@ const RegisterModule = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-start", 
-    marginBottom:30
+    justifyContent: "center",
+    alignItems: "center"
   },
   svgContainer: {
-    position: "absolute", 
-    top: 0, 
-    bottom:200,
+    position: "absolute",
+    top: 0,
+    bottom: 200,
     width: "100%", // Ocupa todo el ancho
     alignItems: "center",
   },
@@ -88,7 +263,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     paddingTop: 150,
-    paddingBottom:0
+    paddingBottom: 0,
   },
   loginButton: {
     backgroundColor: "#D9D9D9",
@@ -114,7 +289,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   contentContainer: {
-    marginTop:30,
+    marginTop: 30,
   },
   title: {
     fontSize: 45,
@@ -122,16 +297,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   input: {
-    width:280,
+    width: 280,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
     textAlign: "left",
-    marginBottom:30
+    marginBottom: 30,
   },
-  containerForm:{
+  containerForm: {
     flexDirection: "row",
     justifyContent: "center",
-  }
+  },
 });
 export default RegisterModule;
