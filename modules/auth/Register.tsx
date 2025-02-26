@@ -32,13 +32,13 @@ const RegisterModule = () => {
       phone: "",
     },
   });
-  const onSubmit = (data:any) => {
+  const onSubmit = (data: any) => {
     console.log(data);
     router.navigate("/principal");
   };
-  const onRegister = async (data:any) => {
+  const onRegister = async (data: any) => {
     try {
-      handleSubmit(onSubmit)
+      handleSubmit(onSubmit);
       await AsyncStorage.setItem("@userData", JSON.stringify(data));
       alert("Registro exitoso");
       router.navigate("/login"); // Redirige a la pantalla de Login
@@ -218,7 +218,7 @@ const RegisterModule = () => {
                 rules={{
                   required: "La contraseña es obligatoria",
                   validate: (value) =>
-                    value === password || "Las contraseñas no coinciden"
+                    value === password || "Las contraseñas no coinciden",
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
@@ -238,9 +238,14 @@ const RegisterModule = () => {
             </View>
           </View>
 
-          <Pressable style={styles.registerButton} onPress={handleSubmit(onRegister)}>
-            <Text style={styles.textWhite} >Registrarse</Text>
-          </Pressable>
+          <View style={styles.register}>
+            <Pressable
+              style={styles.registerButton}
+              onPress={handleSubmit(onRegister)}
+            >
+              <Text style={styles.textWhite}>Registrarse</Text>
+            </Pressable>
+          </View>
         </View>
       </SafeAreaView>
     </KeyboardAwareScrollView>
@@ -250,7 +255,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   svgContainer: {
     position: "absolute",
@@ -298,15 +303,19 @@ const styles = StyleSheet.create({
   },
   input: {
     width: 280,
+    height: 45,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
     textAlign: "left",
-    marginBottom: 30,
+    marginTop: 30,
   },
   containerForm: {
     flexDirection: "row",
     justifyContent: "center",
+  },
+  register: {
+    marginTop: 30,
   },
 });
 export default RegisterModule;

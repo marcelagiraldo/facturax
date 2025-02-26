@@ -14,16 +14,10 @@ const HomeModule = () => {
   return (
     <SafeAreaView style={styles.safeContainer}>
       <StatusBar hidden={false} style="light" />
-
-      {/* SVG en la parte superior */}
       <SvgTop />
-
-      {/* Logo */}
       <View style={styles.logoContainer}>
         <Image source={logo} style={{ width: 120, height: 120 }} />
       </View>
-
-      {/* Contenedor principal con margen para evitar superposición */}
       <View style={styles.container}>
         <CardInfo color="#4A90E2" iconComponent={<AntDesign name="home" size={24} color="black" />} text="Ventas del día" amount="$ 0.00" />
         <CardInfo color="#4A90E2" iconComponent={<Ionicons name="cash-outline" size={24} color="black" />} text="Ventas efectivos" amount="$ 0.00" />

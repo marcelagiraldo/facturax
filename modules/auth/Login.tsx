@@ -144,13 +144,18 @@ const LoginModule = () => {
           {errors.password && (
             <Text style={{ color: "red" }}>{errors.password.message}</Text>
           )}
+          <View style={styles.login}>
+            <Pressable
+              style={styles.loginButton}
+              onPress={handleSubmit(onLogin)}
+            >
+              <Text style={styles.textWhite}>Iniciar Sesión</Text>
+            </Pressable>
 
-          <Pressable style={styles.loginButton} onPress={handleSubmit(onLogin)}>
-            <Text style={styles.textWhite}>Iniciar Sesión</Text>
-          </Pressable>
-          <Pressable className="mt-4">
-            <Text className="text-blue-500">¿Olvidaste la contraseña?</Text>
-          </Pressable>
+            <Pressable className="mt-4">
+              <Text className="text-blue-500">¿Olvidaste la contraseña?</Text>
+            </Pressable>
+          </View>
         </View>
       </SafeAreaView>
     </KeyboardAwareScrollView>
@@ -160,7 +165,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   buttonContainer: {
     flexDirection: "row",
@@ -201,11 +206,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   input: {
+    width: 250,
+    height: 45,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
     textAlign: "left",
-    marginBottom: 30,
+    marginTop: 30,
   },
+  login:{
+    marginTop:30,
+  }
 });
 export default LoginModule;

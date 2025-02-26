@@ -9,7 +9,7 @@ const HomeModule = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F3F4F6'}}>
-      <StatusBar style="light" />
+      <StatusBar hidden={false} style="light" />
 
       {/* Sección superior */}
       <View style={{ flex: 1.2, alignItems: 'center', justifyContent: 'center', backgroundColor: '#003B73', borderBottomLeftRadius: 30, borderBottomRightRadius: 30 }}>
