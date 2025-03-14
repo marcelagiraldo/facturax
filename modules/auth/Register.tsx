@@ -6,47 +6,63 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Link, router } from "expo-router";
+import { Link, router, useRouter } from "expo-router";
 import Svg, { Ellipse } from "react-native-svg";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import SvgTop from "../../components/atoms/SvgTop";
 import { useForm, Controller } from "react-hook-form";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { containers } from "../../components/Tokens";
+import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
+
 const RegisterModule = () => {
+  const router = useRouter();
   const {
     control,
-    handleSubmit,
     watch,
+    handleSubmit,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      name: "",
-      lastname: "",
+      documento: "",
+      nombre: "",
+      apellido: "",
       email: "",
-      password: "",
+      telefono: "",
       confirmPassword: "",
-      phone: "",
+      contraseia: "",
     },
   });
-  const onSubmit = (data: any) => {
-    console.log(data);
-    router.navigate("/principal");
-  };
-  const onRegister = async (data: any) => {
+
+  const onRegister = async (data) => {
+    const { confirmPassword, ...userData } = data;
+    console.log("Datos enviados al backend:", userData);
     try {
-      handleSubmit(onSubmit);
-      await AsyncStorage.setItem("@userData", JSON.stringify(data));
+      const response = await axios.post(
+        "http://192.168.1.101:3006/usuarios/register",
+        userData
+      );
+
+      console.log(
+        "Respuesta del servidor:",
+        response.status,
+        response.userData
+      );
+
       alert("Registro exitoso");
-      router.navigate("/login"); // Redirige a la pantalla de Login
-    } catch (e) {
-      console.log("Error al guardar usuario", e);
+      router.navigate("/login");
+    } catch (error) {
+      console.error("Error en el registro:", error.response?.userData || error);
+      alert(error.response?.userData?.message || "Error al registrar");
     }
   };
-  const password = watch("password");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordRepeat, setShowPasswordRepeat] = useState(false);
+  const password = watch("contraseia");
   return (
     <KeyboardAwareScrollView>
       <SafeAreaView style={styles.container}>
@@ -73,6 +89,31 @@ const RegisterModule = () => {
               <Controller
                 control={control}
                 rules={{
+                  required: "El documento es obligatorio",
+                  pattern: {
+                    value: /^[0-9]+$/, // Solo números
+                    message: "El documento solo debe contener números",
+                  },
+                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Documento"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    autoCapitalize="none"
+                  />
+                )}
+                name="documento"
+              />
+              {errors.documento && (
+                <Text style={{ color: "red" }}>{errors.documento.message}</Text>
+              )}
+
+              <Controller
+                control={control}
+                rules={{
                   required: "El nombre es obligatorio",
                   pattern: {
                     value: /^[A-Za-z\s]+$/,
@@ -89,13 +130,12 @@ const RegisterModule = () => {
                     autoCapitalize="none"
                   />
                 )}
-                name="name"
+                name="nombre"
               />
-              {errors.name && (
-                <Text style={{ color: "red" }}>{errors.name.message}</Text>
+              {errors.nombre && (
+                <Text style={{ color: "red" }}>{errors.nombre.message}</Text>
               )}
 
-              {/* Campo de contraseña */}
               <Controller
                 control={control}
                 rules={{
@@ -115,10 +155,10 @@ const RegisterModule = () => {
                     autoCapitalize="none"
                   />
                 )}
-                name="lastname"
+                name="apellido"
               />
-              {errors.lastname && (
-                <Text style={{ color: "red" }}>{errors.lastname.message}</Text>
+              {errors.apellido && (
+                <Text style={{ color: "red" }}>{errors.apellido.message}</Text>
               )}
             </View>
 
@@ -175,66 +215,94 @@ const RegisterModule = () => {
                     value={value}
                   />
                 )}
-                name="phone"
+                name="telefono"
               />
-              {errors.phone && (
-                <Text style={{ color: "red" }}>{errors.phone.message}</Text>
+              {errors.telefono && (
+                <Text style={{ color: "red" }}>{errors.telefono.message}</Text>
               )}
             </View>
 
             <View>
-              <Controller
-                control={control}
-                rules={{
-                  required: "La contraseña es obligatoria",
-                  minLength: {
-                    value: 6,
-                    message: "La contraseña debe tener al menos 6 caracteres",
-                  },
-                  pattern: {
-                    value:
-                      /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
-                    message:
-                      "Debe incluir una mayúscula, un número y un carácter especial",
-                  },
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Contraseña"
-                    secureTextEntry
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
+              <View style={styles.passwordContainer}>
+                <Controller
+                  control={control}
+                  rules={{
+                    required: "La contraseña es obligatoria",
+                    minLength: {
+                      value: 6,
+                      message: "La contraseña debe tener al menos 6 caracteres",
+                    },
+                    pattern: {
+                      value:
+                        /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
+                      message:
+                        "Debe incluir una mayúscula, un número y un carácter especial",
+                    },
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={styles.inputPassword}
+                      placeholder="Contraseña"
+                      secureTextEntry={!showPassword}
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                    />
+                  )}
+                  name="contraseia"
+                />
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off" : "eye"}
+                    size={24}
+                    color="gray"
                   />
+                </Pressable>
+                {errors.contraseia && (
+                  <Text style={{ color: "red" }}>
+                    {errors.contraseia.message}
+                  </Text>
                 )}
-                name="password"
-              />
-              {errors.password && (
-                <Text style={{ color: "red" }}>{errors.password.message}</Text>
-              )}
-              <Controller
-                control={control}
-                rules={{
-                  required: "La contraseña es obligatoria",
-                  validate: (value) =>
-                    value === password || "Las contraseñas no coinciden",
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Repetir contraseña"
-                    secureTextEntry
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
+              </View>
+              <View style={styles.passwordContainer}>
+                <Controller
+                  control={control}
+                  rules={{
+                    required: "La contraseña es obligatoria",
+                    validate: (value) =>
+                      value === password || "Las contraseñas no coinciden",
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={styles.inputPassword}
+                      placeholder="Repetir contraseña"
+                      secureTextEntry={!showPasswordRepeat}
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                    />
+                  )}
+                  name="confirmPassword"
+                />
+                <Pressable
+                  onPress={() => setShowPasswordRepeat(!showPasswordRepeat)}
+                  style={styles.eyeIcon}
+                >
+                  <Ionicons
+                    name={showPasswordRepeat ? "eye-off" : "eye"}
+                    size={24}
+                    color="gray"
                   />
+                </Pressable>
+                {errors.confirmPassword && (
+                  <Text style={{ color: "red" }}>
+                    {errors.confirmPassword.message}
+                  </Text>
                 )}
-                name="password"
-              />
-              {errors.password && (
-                <Text style={{ color: "red" }}>{errors.password.message}</Text>
-              )}
+              </View>
             </View>
           </View>
 
@@ -288,13 +356,16 @@ const styles = StyleSheet.create({
   textWhite: {
     color: "white",
     fontWeight: "bold",
+    fontSize: 20,
   },
   textBlack: {
     color: "black",
     fontWeight: "bold",
+    fontSize: 20,
   },
   contentContainer: {
     marginTop: 30,
+    marginBottom: 30,
   },
   title: {
     fontSize: 45,
@@ -309,6 +380,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     textAlign: "left",
     marginTop: 30,
+    fontSize: 20,
+    paddingHorizontal: 30,
   },
   containerForm: {
     flexDirection: "row",
@@ -316,6 +389,24 @@ const styles = StyleSheet.create({
   },
   register: {
     marginTop: 30,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: 300,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    marginTop: 30,
+  },
+  inputPassword: {
+    flex: 1,
+    fontSize: 20,
+    height: 55,
+    paddingHorizontal: 20,
+  },
+  eyeIcon: {
+    padding: 10,
   },
 });
 export default RegisterModule;

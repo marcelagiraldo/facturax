@@ -2,30 +2,17 @@ import { View, Text, Pressable, TextInput, StyleSheet } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Link, router } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SvgTop from "../../components/atoms/SvgTop";
 import { colors, containers } from "../../components/Tokens";
+import axios from "axios";
 
 import { useForm, Controller } from "react-hook-form";
+import { Ionicons } from "@expo/vector-icons";
 const LoginModule = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const onSendInfo = async () => {
-    try {
-      const infoLogin = {
-        email,
-        password,
-      };
-      await AsyncStorage.setItem("@infologin", JSON.stringify(infoLogin));
-      router.navigate("/principal");
-      console.log("Info saved");
-    } catch (e) {
-      console.log("Error on save");
-    }
-  };
+  const router = useRouter();
   const {
     control,
     handleSubmit,
@@ -36,38 +23,37 @@ const LoginModule = () => {
       password: "",
     },
   });
-  const onSubmit = (data: any) => {
-    console.log(data);
-    router.navigate("/principal");
-  };
-  const onLogin = async (data: any) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const onLogin = async (data) => {
+    console.log("Datos enviados al backend:", data);
     try {
-      const storedUser = await AsyncStorage.getItem("@userData");
+      const response = await axios.post(
+        "http://192.168.1.101:3006/usuarios/login",
+        {
+          email: data.email,
+          password: data.password,
+        }
+      );
 
-      if (!storedUser) {
-        alert("No hay usuarios registrados. Por favor, regístrese primero.");
-        return;
+      if (response.data.success) {
+        // Guardar el token y/o datos del usuario en AsyncStorage si es necesario
+        await AsyncStorage.setItem("@userToken", response.data.token);
+        await AsyncStorage.setItem(
+          "@userData",
+          JSON.stringify(response.data.user)
+        );
+        alert("Inicio de sesión exitoso");
+        console.log(router);
+        router.replace("/principal");
+        console.log("Inicio sesion Exitoso");
+      } else {
+        alert(response.data.message || "Error en el inicio de sesión");
       }
-
-      const user = JSON.parse(storedUser);
-
-      // Verificar si el usuario existe en el almacenamiento
-      if (user.email !== data.email) {
-        alert("Este usuario no está registrado.");
-        return;
-      }
-
-      // Verificar si la contraseña es correcta
-      if (user.password !== data.password) {
-        alert("Contraseña incorrecta.");
-        return;
-      }
-
-      // Si todo está bien, iniciar sesión
-      alert("Inicio de sesión exitoso");
-      router.navigate("/principal");
-    } catch (e) {
-      console.log("Error al recuperar usuario", e);
+    } catch (error) {
+      console.error("Error en la solicitud de inicio de sesión", error);
+      alert(
+        "Error en el inicio de sesión. Verifica tus credenciales e intenta de nuevo."
+      );
     }
   };
   return (
@@ -115,32 +101,45 @@ const LoginModule = () => {
           )}
 
           {/* Campo de contraseña */}
-          <Controller
-            control={control}
-            rules={{
-              required: "La contraseña es obligatoria",
-              minLength: {
-                value: 6,
-                message: "La contraseña debe tener al menos 6 caracteres",
-              },
-              pattern: {
-                value: /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
-                message:
-                  "Debe incluir una mayúscula, un número y un carácter especial",
-              },
-            }}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Contraseña"
-                secureTextEntry
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
+          <View style={styles.passwordContainer}>
+            <Controller
+              control={control}
+              rules={{
+                required: "La contraseña es obligatoria",
+                minLength: {
+                  value: 6,
+                  message: "La contraseña debe tener al menos 6 caracteres",
+                },
+                pattern: {
+                  value:
+                    /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
+                  message:
+                    "Debe incluir una mayúscula, un número y un carácter especial",
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.inputPassword}
+                  placeholder="Contraseña"
+                  secureTextEntry={!showPassword}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="password"
+            />
+            <Pressable
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeIcon}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={24}
+                color="gray"
               />
-            )}
-            name="password"
-          />
+            </Pressable>
+          </View>
           {errors.password && (
             <Text style={{ color: "red" }}>{errors.password.message}</Text>
           )}
@@ -153,7 +152,9 @@ const LoginModule = () => {
             </Pressable>
 
             <Pressable className="mt-4">
-              <Text className="text-blue-500">¿Olvidaste la contraseña?</Text>
+              <Text className="text-blue-500 text-lg">
+                ¿Olvidaste la contraseña?
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -180,6 +181,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginRight: 10,
     alignItems: "center",
+    fontSize: 30,
   },
   registerButton: {
     backgroundColor: colors.secondaryGray,
@@ -188,14 +190,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginRight: 10,
     alignItems: "center",
+    fontSize: 30,
   },
   textWhite: {
     color: colors.textLight,
     fontWeight: "bold",
+    fontSize: 20,
   },
   textBlack: {
     color: colors.textDark,
     fontWeight: "bold",
+    fontSize: 20,
   },
   contentContainer: {
     marginTop: 80,
@@ -206,16 +211,37 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   input: {
-    width: 250,
-    height: 45,
+    fontSize: 20,
+    width: 300,
+    height: 55,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
     textAlign: "left",
     marginTop: 30,
+    paddingHorizontal: 20,
   },
-  login:{
-    marginTop:30,
-  }
+  login: {
+    marginTop: 30,
+    fontSize: 15,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: 300,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    marginTop: 30,
+  },
+  inputPassword: {
+    flex: 1,
+    fontSize: 20,
+    height: 55,
+    paddingHorizontal: 20,
+  },
+  eyeIcon: {
+    padding: 10,
+  },
 });
 export default LoginModule;
